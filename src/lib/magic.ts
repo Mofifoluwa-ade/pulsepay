@@ -1,9 +1,10 @@
 // Magic SDK — embedded wallet + social login
 // Docs: https://docs.magic.link/embedded-wallets/
+import type { Magic as MagicInstance } from 'magic-sdk'
 
-let magicInstance: unknown = null
+let magicInstance: MagicInstance | null = null
 
-export async function getMagic() {
+export async function getMagic(): Promise<MagicInstance | null> {
   if (typeof window === 'undefined') return null
   if (magicInstance) return magicInstance
 
@@ -19,7 +20,7 @@ export async function getMagic() {
     }
   )
 
-  return magicInstance as InstanceType<typeof Magic>
+  return magicInstance
 }
 
 export async function loginWithEmail(email: string) {
@@ -30,11 +31,20 @@ export async function loginWithEmail(email: string) {
   return metadata
 }
 
+// The typed `oauth` surface only exists once the OAuth extension is registered
+// on the Magic instance. To enable Google login for real:
+//   1. npm i @magic-ext/oauth
+//   2. new Magic(key, { extensions: [new OAuthExtension()], network: {...} })
+// Until then this is a stub — the assertion documents the expected shape.
+type OAuthLogin = {
+  loginWithRedirect(opts: { provider: string; redirectURI: string }): Promise<void>
+}
+
 export async function loginWithGoogle() {
   const magic = await getMagic()
   if (!magic) throw new Error('Magic not available')
   // OAuth redirect flow — configure in Magic dashboard
-  await magic.oauth.loginWithRedirect({
+  await (magic.oauth as unknown as OAuthLogin).loginWithRedirect({
     provider: 'google',
     redirectURI: `${window.location.origin}/dashboard`,
   })
