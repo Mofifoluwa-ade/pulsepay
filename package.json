@@ -9,24 +9,25 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@magic-ext/oauth": "^24.0.0",
+    "@particle-network/universal-account-sdk": "^2.0.3",
+    "@zerodev/ecdsa-validator": "^5.3.3",
+    "@zerodev/sdk": "^5.3.6",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.3.19",
+    "magic-sdk": "^28.4.0",
     "next": "14.2.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "magic-sdk": "^28.4.0",
-    "@particle-network/universal-account-sdk": "^2.0.3",
-    "@zerodev/sdk": "^5.3.6",
-    "@zerodev/ecdsa-validator": "^5.3.3",
     "viem": "^2.28.0",
-    "wagmi": "^2.12.5",
-    "framer-motion": "^11.3.19",
-    "clsx": "^2.1.1"
+    "wagmi": "^2.12.5"
   },
   "devDependencies": {
     "@types/node": "^20.14.12",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "typescript": "^5.5.4",
     "eslint": "^8.57.0",
-    "eslint-config-next": "14.2.5"
+    "eslint-config-next": "14.2.5",
+    "typescript": "^5.5.4"
   }
 }
