@@ -32,18 +32,74 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   const loadSession = async () => {
     try {
+      const isPublicRoute = pathname === '/' || pathname === '/login';
+      const hasLoginFlag = localStorage.getItem('pulsepay_logged_in') === 'true';
+
+      // 1. Optimistic bypass for logged-out users visiting public routes (0ms block!)
+      if (!hasLoginFlag && isPublicRoute) {
+        setLoading(false);
+        verifySessionSilent();
+        return;
+      }
+
+      // 2. Full session verification
+      await verifySession();
+    } catch (error) {
+      console.error('Error loading session:', error);
+      setLoading(false);
+    }
+  };
+
+  const verifySessionSilent = async () => {
+    try {
       if (!magic) {
-        // Mock Mode Session check
         const storedEmail = localStorage.getItem('pulsepay_mock_email');
         if (storedEmail) {
           setEmail(storedEmail);
           const mockAddr = '0x' + Array.from(storedEmail).map(c => c.charCodeAt(0).toString(16)).join('').substring(0, 40).padEnd(40, '0');
           setAddress(mockAddr);
+          localStorage.setItem('pulsepay_logged_in', 'true');
           const uaRes = await upgradeToUniversalAccount(mockAddr);
           setUniversalAddress(uaRes.address);
-          
-          // Fetch balance from API
-          await fetchBalance(uaRes.address);
+          fetchBalance(uaRes.address);
+        }
+        return;
+      }
+
+      const isLoggedIn = await magic.user.isLoggedIn();
+      if (isLoggedIn) {
+        const metadata = await magic.user.getInfo();
+        if (metadata.email && metadata.publicAddress) {
+          setEmail(metadata.email);
+          setAddress(metadata.publicAddress);
+          localStorage.setItem('pulsepay_logged_in', 'true');
+          const uaRes = await upgradeToUniversalAccount(metadata.publicAddress);
+          setUniversalAddress(uaRes.address);
+          fetchBalance(uaRes.address);
+        }
+      }
+    } catch (e) {
+      console.error('Silent session check failed:', e);
+    }
+  };
+
+  const verifySession = async () => {
+    try {
+      if (!magic) {
+        const storedEmail = localStorage.getItem('pulsepay_mock_email');
+        if (storedEmail) {
+          setEmail(storedEmail);
+          const mockAddr = '0x' + Array.from(storedEmail).map(c => c.charCodeAt(0).toString(16)).join('').substring(0, 40).padEnd(40, '0');
+          setAddress(mockAddr);
+          localStorage.setItem('pulsepay_logged_in', 'true');
+
+          // Non-blocking background fetch of Universal Account & Balance
+          upgradeToUniversalAccount(mockAddr).then((uaRes) => {
+            setUniversalAddress(uaRes.address);
+            fetchBalance(uaRes.address);
+          });
+        } else {
+          localStorage.removeItem('pulsepay_logged_in');
         }
         setLoading(false);
         return;
@@ -55,14 +111,16 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         if (metadata.email && metadata.publicAddress) {
           setEmail(metadata.email);
           setAddress(metadata.publicAddress);
-          
-          // Create/Retrieve EIP-7702 Universal Account
-          const uaRes = await upgradeToUniversalAccount(metadata.publicAddress);
-          setUniversalAddress(uaRes.address);
-          
-          // Fetch Balance
-          await fetchBalance(uaRes.address);
+          localStorage.setItem('pulsepay_logged_in', 'true');
+
+          // Non-blocking background fetch of Universal Account & Balance
+          upgradeToUniversalAccount(metadata.publicAddress).then((uaRes) => {
+            setUniversalAddress(uaRes.address);
+            fetchBalance(uaRes.address);
+          });
         }
+      } else {
+        localStorage.removeItem('pulsepay_logged_in');
       }
     } catch (error) {
       console.error('Error verifying Magic session:', error);
@@ -100,7 +158,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   // Redirect Logic
   useEffect(() => {
     if (loading) return;
-    
+
     const isPublicRoute = pathname === '/' || pathname === '/login';
     const hasActiveSession = !!email;
 
@@ -117,13 +175,14 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       if (!magic || process.env.NEXT_PUBLIC_MAGIC_KEY === 'pk_live_mock_key' || !process.env.NEXT_PUBLIC_MAGIC_KEY) {
         // Mock Login Flow
         localStorage.setItem('pulsepay_mock_email', inputEmail);
+        localStorage.setItem('pulsepay_logged_in', 'true');
         setEmail(inputEmail);
         const mockAddr = '0x' + Array.from(inputEmail).map(c => c.charCodeAt(0).toString(16)).join('').substring(0, 40).padEnd(40, '0');
         setAddress(mockAddr);
-        
+
         const uaRes = await upgradeToUniversalAccount(mockAddr);
         setUniversalAddress(uaRes.address);
-        
+
         setLoading(false);
         router.push('/dashboard');
         return true;
@@ -132,16 +191,17 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       // Real Magic Login
       await magic.auth.loginWithEmailOTP({ email: inputEmail });
       const metadata = await magic.user.getInfo();
-      
+
       if (metadata.email && metadata.publicAddress) {
         setEmail(metadata.email);
         setAddress(metadata.publicAddress);
-        
+        localStorage.setItem('pulsepay_logged_in', 'true');
+
         const uaRes = await upgradeToUniversalAccount(metadata.publicAddress);
         setUniversalAddress(uaRes.address);
-        
+
         await fetchBalance(uaRes.address);
-        
+
         router.push('/dashboard');
         return true;
       }
@@ -165,6 +225,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       console.error('Logout error:', error);
     } finally {
       localStorage.removeItem('pulsepay_mock_email');
+      localStorage.removeItem('pulsepay_logged_in');
       setEmail(null);
       setAddress(null);
       setUniversalAddress(null);
@@ -187,7 +248,6 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Provide state context
   return (
     <UserContext.Provider value={{
       email,

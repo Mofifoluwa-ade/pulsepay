@@ -82,5 +82,6 @@
       "token": "USDC",
       "networkFee": "Sponsored"
     }
-  ]
+  ],
+  "scheduledPayments": []
 }
