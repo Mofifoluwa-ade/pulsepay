@@ -83,5 +83,14 @@
       "networkFee": "Sponsored"
     }
   ],
-  "scheduledPayments": []
+  "scheduledPayments": [
+    {
+      "id": "sp-x6lwsu4",
+      "recipientEmail": "toluwanimi006@gmail.com",
+      "amount": 20,
+      "frequency": "weekly",
+      "nextExecution": "Next Monday, 10:00 AM",
+      "status": "active"
+    }
+  ]
 }
