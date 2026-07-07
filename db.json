@@ -1,0 +1,86 @@
+{
+  "balance": 13010,
+  "transactions": [
+    {
+      "id": "tx-udmlz2z",
+      "type": "send",
+      "partnerName": "toluwanimi006",
+      "partnerEmail": "toluwanimi006@gmail.com",
+      "amount": 20,
+      "timestamp": "Today, 11:25 PM",
+      "status": "Completed",
+      "token": "USDC",
+      "networkFee": "Sponsored",
+      "hash": "0xd05a9e4006795d1b2"
+    },
+    {
+      "id": "tx-wkd45rv",
+      "type": "send",
+      "partnerName": "toluwanimi006",
+      "partnerEmail": "toluwanimi006@gmail.com",
+      "amount": 20,
+      "timestamp": "Today, 11:25 PM",
+      "status": "Completed",
+      "token": "USDC",
+      "networkFee": "Sponsored",
+      "hash": "0x17cdda2d840b68d1b2"
+    },
+    {
+      "id": "tx-66ykrnk",
+      "type": "send",
+      "partnerName": "toluwanimi006",
+      "partnerEmail": "toluwanimi006@gmail.com",
+      "amount": 600,
+      "timestamp": "Today, 11:12 PM",
+      "status": "Completed",
+      "token": "USDC",
+      "networkFee": "Sponsored",
+      "hash": "0xb31308501c9e2d1b2"
+    },
+    {
+      "id": "tx-tl2spo1",
+      "type": "send",
+      "partnerName": "toluwanimi006",
+      "partnerEmail": "toluwanimi006@gmail.com",
+      "amount": 600,
+      "timestamp": "Today, 11:12 PM",
+      "status": "Completed",
+      "token": "USDC",
+      "networkFee": "Sponsored",
+      "hash": "0x497fb46f6e208d1b2"
+    },
+    {
+      "id": "tx-1",
+      "type": "send",
+      "partnerName": "Alex K.",
+      "partnerEmail": "alex@pulsepay.com",
+      "amount": 500,
+      "timestamp": "Today, 14:23",
+      "status": "Completed",
+      "token": "USDC",
+      "networkFee": "Sponsored"
+    },
+    {
+      "id": "tx-2",
+      "type": "receive",
+      "partnerName": "Sarah Williams",
+      "partnerEmail": "sarah@mail.com",
+      "amount": 1250,
+      "timestamp": "Yesterday, 09:12",
+      "status": "Completed",
+      "token": "USDC",
+      "networkFee": "Sponsored"
+    },
+    {
+      "id": "tx-3",
+      "type": "swap",
+      "partnerName": "ETH to USDC",
+      "partnerEmail": "dex@pulsepay.com",
+      "amount": 450,
+      "timestamp": "Oct 24, 18:45",
+      "status": "Completed",
+      "token": "USDC",
+      "networkFee": "Sponsored"
+    }
+  ]
+}
