@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUser } from './AuthGate';
 import { Mail, DollarSign } from 'lucide-react';
 import TxStatus from './TxStatus';
@@ -11,6 +11,17 @@ export default function SendForm() {
   const [amount, setAmount] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [sendTxData, setSendTxData] = useState<{ toEmail: string; amount: number; from: string } | null>(null);
+
+  useEffect(() => {
+    const handleQrScan = (e: Event) => {
+      const customEvent = e as CustomEvent<{ value: string }>;
+      if (customEvent.detail && customEvent.detail.value) {
+        setRecipient(customEvent.detail.value);
+      }
+    };
+    window.addEventListener('pulsepay-qr-scanned', handleQrScan);
+    return () => window.removeEventListener('pulsepay-qr-scanned', handleQrScan);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,8 +57,8 @@ export default function SendForm() {
       {!isSending ? (
         <div className="space-y-4">
           <div className="space-y-1">
-            <h2 className="text-[#b7b5b4] text-xs font-mono uppercase tracking-widest">Payment Portal</h2>
-            <h1 className="font-sans text-2xl font-bold text-[#F5F5F5]">Send Capital</h1>
+            <h2 className="text-[#b7b5b4] text-xs font-mono uppercase tracking-widest">Payments</h2>
+            <h1 className="font-sans text-2xl font-bold text-[#F5F5F5]">Send USD</h1>
           </div>
 
           <form 
