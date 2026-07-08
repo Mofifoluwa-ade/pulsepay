@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useUser } from './AuthGate';
 import { useRouter } from 'next/navigation';
-import { RefreshCw, ArrowUpRight } from 'lucide-react';
+import { RefreshCw, ArrowUpRight, QrCode } from 'lucide-react';
 import EkgWave from './EkgWave';
 
 export default function BalanceCard() {
@@ -51,14 +51,23 @@ export default function BalanceCard() {
           <EkgWave height={48} speed={3.0} color="#C1121F" strokeWidth={1.5} glow={false} />
         </div>
 
-        {/* Send Action Button */}
-        <button
-          onClick={() => router.push('/send')}
-          className="w-full bg-[#C1121F] text-white font-sans text-sm font-semibold py-4 rounded-xl hover:bg-[#a00f1a] transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-[#C1121F]/10"
-        >
-          <span>Send</span>
-          <ArrowUpRight className="w-4 h-4" />
-        </button>
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-3.5">
+          <button
+            onClick={() => router.push('/send')}
+            className="w-full bg-[#C1121F] text-white font-sans text-sm font-semibold py-3.5 rounded-xl hover:bg-[#a00f1a] transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-[#C1121F]/10"
+          >
+            <span>Send</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => router.push('/receive')}
+            className="w-full bg-[#1A1A1A] border border-[#2A2A2A] text-[#F5F5F5] font-sans text-sm font-semibold py-3.5 rounded-xl hover:bg-[#201f1f] transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <span>Receive</span>
+            <QrCode className="w-3.5 h-3.5 text-[#C1121F]" />
+          </button>
+        </div>
 
         {/* Subtle, hidden technical account detail for power users */}
         {universalAddress && (
