@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useUser } from './AuthGate';
-import { motion } from 'motion/react';
-import { Check, X, Loader2, ArrowUpRight, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Check, X, Loader2, ArrowUpRight, Copy } from 'lucide-react';
 import EkgWave from './EkgWave';
 
 interface TxStatusProps {
@@ -13,23 +13,24 @@ interface TxStatusProps {
   onClose: () => void;
 }
 
-type Stage = 'Routing' | 'Processing' | 'Completed' | 'Failed';
+type Stage = 'Confirm' | 'Routing' | 'Processing' | 'Completed' | 'Failed';
 
 export default function TxStatus({ toEmail, amount, from, onClose }: TxStatusProps) {
   const { refreshBalance } = useUser();
-  const [stage, setStage] = useState<Stage>('Routing');
+  const [stage, setStage] = useState<Stage>('Confirm');
   const [txHash, setTxHash] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Execute the transaction request
   useEffect(() => {
+    // Only execute on-chain calls once the user authorizes/confirms the transaction
+    if (stage !== 'Routing') return;
+
     let active = true;
     let pollInterval: NodeJS.Timeout;
 
     const startTransaction = async () => {
       try {
-        setStage('Routing');
-        
         // 1. Post to send API
         const res = await fetch('/api/send', {
           method: 'POST',
@@ -78,13 +79,82 @@ export default function TxStatus({ toEmail, amount, from, onClose }: TxStatusPro
       active = false;
       if (pollInterval) clearInterval(pollInterval);
     };
-  }, [from, toEmail, amount]);
+  }, [from, toEmail, amount, stage]);
+
+  // Mini Receipt Confirmation Card
+  if (stage === 'Confirm') {
+    const getRecipientName = (emailStr: string) => {
+      const prefix = emailStr.split('@')[0];
+      const cleanName = prefix.split('.')[0].split('_')[0];
+      return cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+    };
+
+    return (
+      <div className="flex flex-col items-center justify-between min-h-[360px] p-6 text-center select-none bg-[#1A1A1A] z-10 w-full animate-fade-in">
+        <div className="w-full space-y-4">
+          
+          {/* Header */}
+          <div className="space-y-1">
+            <span className="font-mono text-[9px] uppercase tracking-widest text-[#b7b5b4]/40">Authorization Gate</span>
+            <h1 className="font-sans text-lg font-bold text-[#F5F5F5]">Confirm Payment</h1>
+          </div>
+
+          {/* Ticket styling receipt */}
+          <div className="bg-[#0A0A0A] border border-[#2A2A2A] rounded-2xl p-5 text-left font-mono text-[10px] space-y-3.5 shadow-inner relative">
+            <div className="flex justify-between items-baseline">
+              <span className="text-[#b7b5b4]/50">RECIPIENT NAME:</span>
+              <span className="text-[#F5F5F5] font-sans font-semibold text-xs">{getRecipientName(toEmail)}</span>
+            </div>
+            
+            <div className="flex justify-between items-baseline">
+              <span className="text-[#b7b5b4]/50">EMAIL ADDRESS:</span>
+              <span className="text-[#F5F5F5] font-semibold truncate max-w-[150px]" title={toEmail}>{toEmail}</span>
+            </div>
+
+            <div className="flex justify-between items-baseline">
+              <span className="text-[#b7b5b4]/50">ROUTING CHAIN:</span>
+              <span className="text-[#F5F5F5] uppercase text-[9px]">Arbitrum Sepolia L2</span>
+            </div>
+
+            <div className="border-t border-dashed border-[#2A2A2A]/80 my-3.5" />
+
+            <div className="flex justify-between items-baseline">
+              <span className="text-[#b7b5b4]/50">AMOUNT:</span>
+              <div className="text-right">
+                <span className="text-[#F5F5F5] font-sans text-sm font-bold">${amount.toFixed(2)}</span>
+                <span className="text-[8px] text-[#b7b5b4]/30 ml-1">USDC</span>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-baseline">
+              <span className="text-[#b7b5b4]/50">TRANSFER FEES:</span>
+              <span className="text-[#10B981] font-semibold uppercase tracking-wider text-[9px]">100% Sponsored</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="w-full flex gap-3.5 mt-6 z-10">
+          <button
+            onClick={onClose}
+            className="flex-1 bg-[#1A1A1A] border border-[#2A2A2A] text-[#F5F5F5] hover:bg-[#201f1f] text-xs font-semibold py-3.5 rounded-xl transition-all cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => setStage('Routing')}
+            className="flex-1 bg-[#C1121F] hover:bg-[#a00f1a] text-white text-xs font-semibold py-3.5 rounded-xl transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 shadow-lg shadow-[#C1121F]/10 font-sans"
+          >
+            <span>Authorize</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (stage === 'Completed') {
-    const cleanName = toEmail.split('@')[0];
-    
     return (
-      <div className="relative flex flex-col items-center justify-between min-h-[380px] p-6 text-center select-none bg-[#1A1A1A] z-10">
+      <div className="relative flex flex-col items-center justify-between min-h-[380px] p-6 text-center select-none bg-[#1A1A1A] z-10 w-full">
         
         {/* Expanding Pulse Ring Animation (Concentric Rings) */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
@@ -176,7 +246,7 @@ export default function TxStatus({ toEmail, amount, from, onClose }: TxStatusPro
 
   if (stage === 'Failed') {
     return (
-      <div className="flex flex-col items-center justify-between min-h-[350px] p-6 text-center select-none bg-[#1A1A1A]">
+      <div className="flex flex-col items-center justify-between min-h-[350px] p-6 text-center select-none bg-[#1A1A1A] w-full">
         
         {/* Error Header */}
         <div className="mt-4">
@@ -204,8 +274,8 @@ export default function TxStatus({ toEmail, amount, from, onClose }: TxStatusPro
 
   // Active Sending States ("Routing..." -> "Processing...")
   return (
-    <div className="flex flex-col items-center justify-center min-h-[350px] py-8 text-center select-none bg-[#1A1A1A]">
-      <div className="space-y-6 max-w-xs">
+    <div className="flex flex-col items-center justify-center min-h-[350px] py-8 text-center select-none bg-[#1A1A1A] w-full">
+      <div className="space-y-6 max-w-xs w-full">
         {/* Dynamic EKG animation representing block routing */}
         <div className="w-full h-16 relative overflow-hidden bg-[#0A0A0A] border border-[#2A2A2A] rounded-2xl flex items-center justify-center">
           <EkgWave height={64} speed={stage === 'Routing' ? 2.5 : 1.2} color="#C1121F" strokeWidth={2} glow={true} />

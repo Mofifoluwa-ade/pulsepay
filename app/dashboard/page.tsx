@@ -10,6 +10,7 @@ import EkgWave from '../../components/EkgWave';
 import BalanceCard from '../../components/BalanceCard';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import BalanceChart from '../../components/BalanceChart';
 
 export default function Dashboard() {
   const { email, universalAddress, balance, refreshBalance } = useUser();
@@ -263,6 +264,9 @@ export default function Dashboard() {
           {/* Left Side: Operations (Quick Send + Recurring Schedules) */}
           <div className="col-span-3 space-y-6">
             
+            {/* D3 Historical Balance Trend Chart */}
+            <BalanceChart transactions={transactions} currentBalance={balance} />
+
             {/* Quick Send Widget */}
             <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-6 space-y-4 shadow-lg relative overflow-hidden">
               <div className="flex items-center justify-between border-b border-[#2A2A2A]/40 pb-3">
