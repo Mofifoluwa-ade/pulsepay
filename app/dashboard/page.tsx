@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { Transaction, ScheduledPayment } from '../../lib/types';
 import { useUser } from '../../components/AuthGate';
-import { Send, Wallet, Clock, Flame, RefreshCw, Copy, Check, Plus, Calendar, Activity, QrCode } from 'lucide-react';
+import { Send, Wallet, Clock, Flame, RefreshCw, Copy, Check, Plus, Calendar, Activity, QrCode, X } from 'lucide-react';
 import TxStatus from '../../components/TxStatus';
 import EkgWave from '../../components/EkgWave';
 import BalanceCard from '../../components/BalanceCard';
@@ -344,10 +344,10 @@ export default function Dashboard() {
                         <span className="font-mono text-[11px] font-bold text-[#F5F5F5]">${sp.amount.toFixed(2)}</span>
                         <button 
                           onClick={() => handleCancelSchedule(sp.id)}
-                          className="text-[#b7b5b4]/30 hover:text-[#FF4757] transition-colors cursor-pointer"
+                          className="text-[#b7b5b4]/40 hover:text-[#FF4757] p-1.5 hover:bg-[#FF4757]/10 border border-transparent hover:border-[#FF4757]/20 rounded-lg transition-all cursor-pointer flex items-center justify-center"
                           title="Cancel Schedule"
                         >
-                          Cancel
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>

@@ -1,6 +1,30 @@
 {
-  "balance": 13010,
+  "balance": 13008,
   "transactions": [
+    {
+      "id": "tx-elrv5fg",
+      "type": "send",
+      "partnerName": "toluwanimi006",
+      "partnerEmail": "toluwanimi006@gmail.com",
+      "amount": 1,
+      "timestamp": "Today, 02:50 AM",
+      "status": "Completed",
+      "token": "USDC",
+      "networkFee": "Sponsored",
+      "hash": "0x8116d6b98210cd1b2"
+    },
+    {
+      "id": "tx-wumc7ss",
+      "type": "send",
+      "partnerName": "toluwanimi006",
+      "partnerEmail": "toluwanimi006@gmail.com",
+      "amount": 1,
+      "timestamp": "Today, 02:50 AM",
+      "status": "Completed",
+      "token": "USDC",
+      "networkFee": "Sponsored",
+      "hash": "0x344d137df033dd1b2"
+    },
     {
       "id": "tx-udmlz2z",
       "type": "send",
