@@ -14,6 +14,7 @@ interface UserContextType {
   balance: number;
   loading: boolean;
   login: (email: string) => Promise<boolean>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   refreshBalance: () => Promise<void>;
 }
@@ -32,8 +33,36 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   const loadSession = async () => {
     try {
-      const isPublicRoute = pathname === '/' || pathname === '/login';
+      const isPublicRoute = pathname === '/' || pathname === '/login' || pathname === '/callback';
       const hasLoginFlag = localStorage.getItem('pulsepay_logged_in') === 'true';
+
+      if (pathname === '/callback') {
+        setLoading(true);
+        if (magic) {
+          try {
+            const result = await (magic as any).oauth2.getRedirectResult();
+            const metadata = result.magic.userMetadata;
+            if (metadata.email && metadata.publicAddress) {
+              setEmail(metadata.email);
+              setAddress(metadata.publicAddress);
+              localStorage.setItem('pulsepay_logged_in', 'true');
+
+              const uaRes = await upgradeToUniversalAccount(metadata.publicAddress);
+              setUniversalAddress(uaRes.address);
+              await fetchBalance(uaRes.address);
+
+              setLoading(false);
+              router.push('/dashboard');
+              return;
+            }
+          } catch (e) {
+            console.error('OAuth redirect result error:', e);
+          }
+        }
+        setLoading(false);
+        router.push('/');
+        return;
+      }
 
       // 1. Optimistic bypass for logged-out users visiting public routes (0ms block!)
       if (!hasLoginFlag && isPublicRoute) {
@@ -159,7 +188,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
-    const isPublicRoute = pathname === '/' || pathname === '/login';
+    const isPublicRoute = pathname === '/' || pathname === '/login' || pathname === '/callback';
     const hasActiveSession = !!email;
 
     if (!hasActiveSession && !isPublicRoute) {
@@ -215,6 +244,39 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginWithGoogle = async (): Promise<void> => {
+    setLoading(true);
+    try {
+      if (!magic || process.env.NEXT_PUBLIC_MAGIC_KEY === 'pk_live_mock_key' || !process.env.NEXT_PUBLIC_MAGIC_KEY) {
+        // Mock Login Flow
+        const mockEmail = 'google-user@pulsepay.com';
+        localStorage.setItem('pulsepay_mock_email', mockEmail);
+        localStorage.setItem('pulsepay_logged_in', 'true');
+        setEmail(mockEmail);
+        const mockAddr = '0x' + Array.from(mockEmail).map(c => c.charCodeAt(0).toString(16)).join('').substring(0, 40).padEnd(40, '0');
+        setAddress(mockAddr);
+
+        const uaRes = await upgradeToUniversalAccount(mockAddr);
+        setUniversalAddress(uaRes.address);
+
+        setLoading(false);
+        router.push('/dashboard');
+        return;
+      }
+
+      // Real Magic Login with Redirect
+      const redirectUri = `${window.location.origin}/callback`;
+      await (magic as any).oauth2.loginWithRedirect({
+        provider: 'google',
+        redirectURI: redirectUri,
+      });
+    } catch (error) {
+      console.error('Google authentication failed:', error);
+      alert('Google authentication failed. Please check your console log or retry.');
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     setLoading(true);
     try {
@@ -256,6 +318,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       balance,
       loading,
       login,
+      loginWithGoogle,
       logout,
       refreshBalance
     }}>

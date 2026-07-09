@@ -1,4 +1,5 @@
 import { Magic } from 'magic-sdk';
+import { OAuthExtension } from '@magic-ext/oauth2';
 
 const createMagic = () => {
   if (typeof window === 'undefined') return null;
@@ -19,6 +20,7 @@ const createMagic = () => {
         rpcUrl,
         chainId: 421614, // Arbitrum Sepolia Testnet
       },
+      extensions: [new OAuthExtension()],
     });
   } catch (e) {
     console.error('Failed to initialize Magic SDK:', e);

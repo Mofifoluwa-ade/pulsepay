@@ -7,7 +7,7 @@ import Logo from '../components/Logo';
 import { Mail, ArrowRight, Chrome } from 'lucide-react';
 
 export default function Home() {
-  const { login } = useUser();
+  const { login, loginWithGoogle } = useUser();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -25,10 +25,8 @@ export default function Home() {
   const handleGoogleLogin = async () => {
     setIsSubmitting(true);
     // Standard OAuth Google Login or fallback email simulator
-    const success = await login('google-user@pulsepay.com');
-    if (!success) {
-      setIsSubmitting(false);
-    }
+    await loginWithGoogle();
+    setIsSubmitting(false);
   };
 
   return (
