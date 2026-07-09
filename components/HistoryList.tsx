@@ -6,13 +6,14 @@ import { useUser } from './AuthGate';
 import { Send, Wallet, ArrowUpDown, RefreshCw, Check } from 'lucide-react';
 
 export default function HistoryList() {
-  const { universalAddress } = useUser();
+  const { email, universalAddress } = useUser();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchTransactions = async () => {
+    if (!email) return;
     try {
-      const res = await fetch('/api/transactions');
+      const res = await fetch(`/api/transactions?email=${encodeURIComponent(email)}`);
       if (res.ok) {
         const data = await res.json();
         setTransactions(data);
@@ -26,7 +27,7 @@ export default function HistoryList() {
 
   useEffect(() => {
     fetchTransactions();
-  }, [universalAddress]);
+  }, [universalAddress, email]);
 
   if (loading) {
     return (

@@ -1,9 +1,38 @@
 import { NextResponse } from 'next/server';
+import { supabase, isSupabaseConfigured } from '../../../lib/supabase';
 import { getDb, saveDb } from '../../../lib/db';
 import { ScheduledPayment } from '../../../lib/types';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const email = searchParams.get('email');
+
+    if (!email) {
+      return NextResponse.json({ error: 'Email parameter is required.' }, { status: 400 });
+    }
+
+    if (isSupabaseConfigured) {
+      const { data, error } = await supabase
+        .from('scheduled_payments')
+        .select('*')
+        .eq('user_email', email.toLowerCase());
+
+      if (error) throw error;
+
+      const mapped = (data || []).map((sp) => ({
+        id: sp.id,
+        recipientEmail: sp.recipient_email,
+        amount: Number(sp.amount),
+        frequency: sp.frequency,
+        nextExecution: sp.next_execution,
+        status: sp.status,
+      }));
+
+      return NextResponse.json(mapped);
+    }
+
+    // Fallback to local db.json
     const db = getDb();
     return NextResponse.json(db.scheduledPayments || []);
   } catch (error: any) {
@@ -13,9 +42,9 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { recipientEmail, amount, frequency } = await req.json();
+    const { recipientEmail, amount, frequency, email } = await req.json();
 
-    if (!recipientEmail || amount === undefined || isNaN(Number(amount)) || !frequency) {
+    if (!recipientEmail || amount === undefined || isNaN(Number(amount)) || !frequency || !email) {
       return NextResponse.json({ error: 'Missing or invalid parameters.' }, { status: 400 });
     }
 
@@ -24,8 +53,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Amount must be greater than zero.' }, { status: 400 });
     }
 
-    const db = getDb();
-    
     // Generate simple execution text based on frequency
     let nextExecutionText = '';
     const now = new Date();
@@ -39,8 +66,36 @@ export async function POST(req: Request) {
       nextExecutionText = 'Once on ' + new Date(now.getTime() + 86400000 * 2).toLocaleDateString();
     }
 
+    const newScheduleId = `sp-${Math.random().toString(36).substring(2, 9)}`;
+
+    if (isSupabaseConfigured) {
+      const lowerEmail = email.toLowerCase();
+      const { error } = await supabase.from('scheduled_payments').insert({
+        id: newScheduleId,
+        user_email: lowerEmail,
+        recipient_email: recipientEmail,
+        amount: numAmount,
+        frequency,
+        next_execution: nextExecutionText,
+        status: 'active',
+      });
+
+      if (error) throw error;
+
+      return NextResponse.json({
+        id: newScheduleId,
+        recipientEmail,
+        amount: numAmount,
+        frequency,
+        nextExecution: nextExecutionText,
+        status: 'active',
+      });
+    }
+
+    // Fallback to local db.json
+    const db = getDb();
     const newSchedule: ScheduledPayment = {
-      id: `sp-${Math.random().toString(36).substring(2, 9)}`,
+      id: newScheduleId,
       recipientEmail,
       amount: numAmount,
       frequency,
@@ -61,11 +116,24 @@ export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
+    const email = searchParams.get('email');
 
-    if (!id) {
-      return NextResponse.json({ error: 'Schedule ID is required.' }, { status: 400 });
+    if (!id || !email) {
+      return NextResponse.json({ error: 'Schedule ID and Email are required.' }, { status: 400 });
     }
 
+    if (isSupabaseConfigured) {
+      const { error } = await supabase
+        .from('scheduled_payments')
+        .delete()
+        .eq('id', id)
+        .eq('user_email', email.toLowerCase());
+
+      if (error) throw error;
+      return NextResponse.json({ success: true });
+    }
+
+    // Fallback to local db.json
     const db = getDb();
     const originalLength = db.scheduledPayments.length;
     db.scheduledPayments = db.scheduledPayments.filter((sp) => sp.id !== id);

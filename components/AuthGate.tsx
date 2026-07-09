@@ -49,7 +49,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
               const uaRes = await upgradeToUniversalAccount(metadata.publicAddress);
               setUniversalAddress(uaRes.address);
-              await fetchBalance(uaRes.address);
+              await fetchBalance(uaRes.address, metadata.email, metadata.publicAddress);
 
               setLoading(false);
               router.push('/dashboard');
@@ -90,7 +90,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           localStorage.setItem('pulsepay_logged_in', 'true');
           const uaRes = await upgradeToUniversalAccount(mockAddr);
           setUniversalAddress(uaRes.address);
-          fetchBalance(uaRes.address);
+          fetchBalance(uaRes.address, storedEmail, mockAddr);
         }
         return;
       }
@@ -104,7 +104,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           localStorage.setItem('pulsepay_logged_in', 'true');
           const uaRes = await upgradeToUniversalAccount(metadata.publicAddress);
           setUniversalAddress(uaRes.address);
-          fetchBalance(uaRes.address);
+          fetchBalance(uaRes.address, metadata.email, metadata.publicAddress);
         }
       }
     } catch (e) {
@@ -125,7 +125,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           // Non-blocking background fetch of Universal Account & Balance
           upgradeToUniversalAccount(mockAddr).then((uaRes) => {
             setUniversalAddress(uaRes.address);
-            fetchBalance(uaRes.address);
+            fetchBalance(uaRes.address, storedEmail, mockAddr);
           });
         } else {
           localStorage.removeItem('pulsepay_logged_in');
@@ -145,7 +145,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           // Non-blocking background fetch of Universal Account & Balance
           upgradeToUniversalAccount(metadata.publicAddress).then((uaRes) => {
             setUniversalAddress(uaRes.address);
-            fetchBalance(uaRes.address);
+            fetchBalance(uaRes.address, metadata.email, metadata.publicAddress);
           });
         }
       } else {
@@ -158,12 +158,14 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const fetchBalance = async (uaAddr: string) => {
+  const fetchBalance = async (uaAddr: string, userEmail?: string | null, eoaAddr?: string | null) => {
     try {
+      const activeEmail = userEmail || email;
+      const activeEoa = eoaAddr || address;
       const res = await fetch('/api/balance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: uaAddr }),
+        body: JSON.stringify({ address: activeEoa, email: activeEmail, universalAddress: uaAddr }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -176,7 +178,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   const refreshBalance = async () => {
     if (universalAddress) {
-      await fetchBalance(universalAddress);
+      await fetchBalance(universalAddress, email, address);
     }
   };
 
@@ -212,6 +214,8 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         const uaRes = await upgradeToUniversalAccount(mockAddr);
         setUniversalAddress(uaRes.address);
 
+        await fetchBalance(uaRes.address, inputEmail, mockAddr);
+
         setLoading(false);
         router.push('/dashboard');
         return true;
@@ -229,7 +233,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         const uaRes = await upgradeToUniversalAccount(metadata.publicAddress);
         setUniversalAddress(uaRes.address);
 
-        await fetchBalance(uaRes.address);
+        await fetchBalance(uaRes.address, metadata.email, metadata.publicAddress);
 
         router.push('/dashboard');
         return true;
@@ -258,6 +262,8 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
         const uaRes = await upgradeToUniversalAccount(mockAddr);
         setUniversalAddress(uaRes.address);
+
+        await fetchBalance(uaRes.address, mockEmail, mockAddr);
 
         setLoading(false);
         router.push('/dashboard');

@@ -7,7 +7,7 @@ import { useUser } from '../../components/AuthGate';
 import { Calendar, Mail, DollarSign, Clock, Trash2, Plus, Sparkles } from 'lucide-react';
 
 export default function SchedulePage() {
-  const { balance } = useUser();
+  const { email, balance } = useUser();
   const [scheduled, setScheduled] = useState<ScheduledPayment[]>([]);
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
@@ -17,8 +17,9 @@ export default function SchedulePage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const fetchScheduled = async () => {
+    if (!email) return;
     try {
-      const res = await fetch('/api/schedule');
+      const res = await fetch(`/api/schedule?email=${encodeURIComponent(email)}`);
       if (res.ok) {
         const data = await res.json();
         setScheduled(data);
@@ -32,7 +33,7 @@ export default function SchedulePage() {
 
   useEffect(() => {
     fetchScheduled();
-  }, []);
+  }, [email]);
 
   const handleScheduleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +45,7 @@ export default function SchedulePage() {
       const res = await fetch('/api/schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipientEmail: recipient, amount: parseFloat(amount), frequency }),
+        body: JSON.stringify({ recipientEmail: recipient, amount: parseFloat(amount), frequency, email }),
       });
 
       if (res.ok) {
@@ -64,8 +65,9 @@ export default function SchedulePage() {
   };
 
   const handleCancelSchedule = async (id: string) => {
+    if (!email) return;
     try {
-      const res = await fetch(`/api/schedule?id=${id}`, {
+      const res = await fetch(`/api/schedule?id=${id}&email=${encodeURIComponent(email)}`, {
         method: 'DELETE',
       });
       if (res.ok) {

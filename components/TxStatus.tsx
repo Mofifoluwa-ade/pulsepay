@@ -16,7 +16,7 @@ interface TxStatusProps {
 type Stage = 'Confirm' | 'Routing' | 'Processing' | 'Completed' | 'Failed';
 
 export default function TxStatus({ toEmail, amount, from, onClose }: TxStatusProps) {
-  const { refreshBalance } = useUser();
+  const { email, refreshBalance } = useUser();
   const [stage, setStage] = useState<Stage>('Confirm');
   const [txHash, setTxHash] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -35,7 +35,7 @@ export default function TxStatus({ toEmail, amount, from, onClose }: TxStatusPro
         const res = await fetch('/api/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ from, toEmail, amount }),
+          body: JSON.stringify({ from, toEmail, amount, email }),
         });
 
         if (!res.ok) {

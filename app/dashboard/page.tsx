@@ -34,16 +34,17 @@ export default function Dashboard() {
   const [showAddressInModal, setShowAddressInModal] = useState(true);
 
   const loadData = async () => {
+    if (!email) return;
     try {
       // Load transactions
-      const txRes = await fetch('/api/transactions');
+      const txRes = await fetch(`/api/transactions?email=${encodeURIComponent(email)}`);
       if (txRes.ok) {
         const txData = await txRes.json();
         setTransactions(txData);
       }
 
       // Load schedules
-      const schedRes = await fetch('/api/schedule');
+      const schedRes = await fetch(`/api/schedule?email=${encodeURIComponent(email)}`);
       if (schedRes.ok) {
         const schedData = await schedRes.json();
         setSchedules(schedData);
@@ -94,8 +95,9 @@ export default function Dashboard() {
   };
 
   const handleCancelSchedule = async (id: string) => {
+    if (!email) return;
     try {
-      const res = await fetch(`/api/schedule?id=${id}`, {
+      const res = await fetch(`/api/schedule?id=${id}&email=${encodeURIComponent(email)}`, {
         method: 'DELETE',
       });
       if (res.ok) {
