@@ -13,6 +13,20 @@ export default function SendForm() {
   const [sendTxData, setSendTxData] = useState<{ toEmail: string; amount: number; from: string } | null>(null);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const recipientParam = params.get('recipient') || params.get('email');
+      const amountParam = params.get('amount');
+      if (recipientParam) {
+        setRecipient(recipientParam);
+      }
+      if (amountParam) {
+        setAmount(amountParam);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     const handleQrScan = (e: Event) => {
       const customEvent = e as CustomEvent<{ value: string }>;
       if (customEvent.detail && customEvent.detail.value) {

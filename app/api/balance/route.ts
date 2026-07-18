@@ -45,7 +45,7 @@ async function handleBalanceRequest(
     ) {
       fallbackBalance = 13006.00;
     } else {
-      fallbackBalance = 1000.00; // Default faucet funds for custom mock users
+      fallbackBalance = 0.00; // Default balance for new custom users
     }
 
     if (isSupabaseConfigured) {

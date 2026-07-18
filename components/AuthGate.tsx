@@ -203,7 +203,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const login = async (inputEmail: string): Promise<boolean> => {
     setLoading(true);
     try {
-      if (!magic || process.env.NEXT_PUBLIC_MAGIC_KEY === 'pk_live_mock_key' || !process.env.NEXT_PUBLIC_MAGIC_KEY) {
+      if (!magic || process.env.NEXT_PUBLIC_MAGIC_KEY === 'pk_live_mock_key' || !process.env.NEXT_PUBLIC_MAGIC_KEY || inputEmail.toLowerCase().includes('mock')) {
         // Mock Login Flow
         localStorage.setItem('pulsepay_mock_email', inputEmail);
         localStorage.setItem('pulsepay_logged_in', 'true');

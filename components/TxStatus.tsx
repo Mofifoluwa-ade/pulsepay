@@ -21,6 +21,52 @@ export default function TxStatus({ toEmail, amount, from, onClose }: TxStatusPro
   const [txHash, setTxHash] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const [friendName, setFriendName] = useState('');
+  const [isAddedToFriends, setIsAddedToFriends] = useState(false);
+  const [isAddingFriend, setIsAddingFriend] = useState(false);
+
+  // Check if recipient is already in friend list
+  useEffect(() => {
+    if (stage === 'Completed' && typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('pulsepay_friends');
+        const list = stored ? JSON.parse(stored) : [];
+        const exists = list.some((f: any) => f.email.toLowerCase() === toEmail.toLowerCase());
+        setIsAddedToFriends(exists);
+        
+        // Pre-fill friend nickname with email prefix
+        const prefix = toEmail.split('@')[0];
+        setFriendName(prefix.charAt(0).toUpperCase() + prefix.slice(1));
+      } catch (e) {
+        console.error('Error reading friends list:', e);
+      }
+    }
+  }, [stage, toEmail]);
+
+  const handleAddToFriends = () => {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = localStorage.getItem('pulsepay_friends');
+      const list = stored ? JSON.parse(stored) : [];
+      
+      const exists = list.some((f: any) => f.email.toLowerCase() === toEmail.toLowerCase());
+      if (!exists) {
+        const newFriend = {
+          id: `friend-${Math.random().toString(36).substring(2, 9)}`,
+          email: toEmail.toLowerCase(),
+          name: friendName.trim() || toEmail.split('@')[0],
+          initials: (friendName.trim() || toEmail).substring(0, 2).toUpperCase(),
+        };
+        const updatedList = [...list, newFriend];
+        localStorage.setItem('pulsepay_friends', JSON.stringify(updatedList));
+      }
+      setIsAddedToFriends(true);
+      setIsAddingFriend(false);
+    } catch (e) {
+      console.error('Error saving friend:', e);
+    }
+  };
+
   // Execute the transaction request
   useEffect(() => {
     // Only execute on-chain calls once the user authorizes/confirms the transaction
@@ -195,6 +241,42 @@ export default function TxStatus({ toEmail, amount, from, onClose }: TxStatusPro
           <p className="font-mono text-xs text-[#b7b5b4]">
             to {toEmail}
           </p>
+        </div>
+
+        {/* Friend List Save Action */}
+        <div className="relative z-10 w-full max-w-xs mt-4 p-3.5 bg-[#0A0A0A] border border-[#2A2A2A] rounded-2xl flex flex-col gap-2">
+          {isAddedToFriends ? (
+            <div className="flex items-center justify-center gap-2 text-[#10B981] font-mono text-[10px] uppercase tracking-wider py-1.5">
+              <Check className="w-3.5 h-3.5" strokeWidth={3} />
+              <span>Saved in Friends</span>
+            </div>
+          ) : !isAddingFriend ? (
+            <button
+              onClick={() => setIsAddingFriend(true)}
+              className="w-full border border-dashed border-[#2A2A2A] hover:border-[#C1121F] text-[#b7b5b4] hover:text-[#F5F5F5] font-mono text-[10px] uppercase tracking-wider py-2 rounded-lg transition-colors cursor-pointer"
+            >
+              + Add to Friend List
+            </button>
+          ) : (
+            <div className="space-y-2 text-left">
+              <span className="font-mono text-[8px] uppercase tracking-widest text-[#b7b5b4]/50 block">Friend Nickname</span>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={friendName}
+                  onChange={(e) => setFriendName(e.target.value)}
+                  placeholder="Nickname"
+                  className="flex-1 bg-[#1A1A1A] border border-[#2A2A2A] text-[#F5F5F5] rounded-xl px-2.5 py-1.5 font-sans text-xs outline-none focus:border-[#C1121F] transition-colors"
+                />
+                <button
+                  onClick={handleAddToFriends}
+                  className="bg-[#C1121F] hover:bg-[#a00f1a] text-white font-mono text-[10px] uppercase px-3.5 py-1.5 rounded-xl transition-colors cursor-pointer font-bold"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Drawing EKG Waveform Across Bottom */}
