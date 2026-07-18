@@ -25,7 +25,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const [email, setEmail] = useState<string | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const [universalAddress, setUniversalAddress] = useState<string | null>(null);
-  const [balance, setBalance] = useState<number>(14250.00);
+  const [balance, setBalance] = useState<number>(0.00);
   const [loading, setLoading] = useState(true);
   
   const router = useRouter();

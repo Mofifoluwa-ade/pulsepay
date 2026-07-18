@@ -32,57 +32,8 @@ async function handleBalanceRequest(
     return NextResponse.json({ balance: onChainBalance });
   }
 
-  // 2. Fallback to mock balance stored in Supabase or hardcoded defaults
-  let fallbackBalance = 14250.00; // default initial demo balance
-  if (email) {
-    const lowerEmail = email.toLowerCase();
-    
-    // Default mock balance for built-in demo users
-    if (
-      lowerEmail === 'google-user@pulsepay.com' ||
-      lowerEmail === 'sarah.c@pulsepay.com' ||
-      lowerEmail === 'toluwanimi006@gmail.com'
-    ) {
-      fallbackBalance = 13006.00;
-    } else {
-      fallbackBalance = 0.00; // Default balance for new custom users
-    }
-
-    if (isSupabaseConfigured) {
-      try {
-        // Upsert user profile first
-        await supabase
-          .from('users')
-          .upsert({
-            email: lowerEmail,
-            address: address || null,
-            universal_address: universalAddress || null,
-          }, { onConflict: 'email' });
-
-        // Calculate their balance by summing all of their transactions in the DB
-        const { data: txs, error } = await supabase
-          .from('transactions')
-          .select('type, amount')
-          .eq('user_email', lowerEmail);
-        
-        if (!error && txs) {
-          let calculatedBalance = fallbackBalance;
-          txs.forEach((tx) => {
-            if (tx.type === 'send') {
-              calculatedBalance = Math.max(0, calculatedBalance - Number(tx.amount));
-            } else {
-              calculatedBalance = calculatedBalance + Number(tx.amount);
-            }
-          });
-          fallbackBalance = calculatedBalance;
-        }
-      } catch (err) {
-        console.error('Error fetching fallback balance from Supabase:', err);
-      }
-    }
-  }
-
-  return NextResponse.json({ balance: fallbackBalance });
+  // 2. Return 0.00 if balance cannot be fetched
+  return NextResponse.json({ balance: 0.00 });
 }
 
 export async function POST(req: Request) {

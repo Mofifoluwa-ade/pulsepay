@@ -18,16 +18,17 @@ export default function ReceivePage() {
   const [generatedRequestLink, setGeneratedRequestLink] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // Load friends from localStorage
-  const loadFriends = () => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('pulsepay_friends');
-        const list = stored ? JSON.parse(stored) : [];
+  // Load friends from Supabase
+  const loadFriends = async () => {
+    if (!email) return;
+    try {
+      const res = await fetch(`/api/friends?email=${encodeURIComponent(email)}`);
+      if (res.ok) {
+        const list = await res.json();
         setFriends(list);
-      } catch (e) {
-        console.error('Error loading friends list:', e);
       }
+    } catch (e) {
+      console.error('Error loading friends list:', e);
     }
   };
 

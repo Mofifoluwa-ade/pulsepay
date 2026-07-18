@@ -25,9 +25,9 @@ class ParticleUAWrapper {
     if (isMockMode || !this.sdkInstance) {
       // Return simulated unified balance across chains
       return {
-        total: 14250.00,
+        total: 0.00,
         chains: [
-          { chainName: 'Arbitrum L2', balance: 14250.00 },
+          { chainName: 'Arbitrum L2', balance: 0.00 },
           { chainName: 'Optimism L2', balance: 0.00 },
           { chainName: 'Base L2', balance: 0.00 }
         ]

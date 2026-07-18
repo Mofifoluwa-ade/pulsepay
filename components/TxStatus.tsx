@@ -25,45 +25,51 @@ export default function TxStatus({ toEmail, amount, from, onClose }: TxStatusPro
   const [isAddedToFriends, setIsAddedToFriends] = useState(false);
   const [isAddingFriend, setIsAddingFriend] = useState(false);
 
-  // Check if recipient is already in friend list
+  // Check if recipient is already in friend list using database API
   useEffect(() => {
-    if (stage === 'Completed' && typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('pulsepay_friends');
-        const list = stored ? JSON.parse(stored) : [];
-        const exists = list.some((f: any) => f.email.toLowerCase() === toEmail.toLowerCase());
-        setIsAddedToFriends(exists);
-        
-        // Pre-fill friend nickname with email prefix
-        const prefix = toEmail.split('@')[0];
-        setFriendName(prefix.charAt(0).toUpperCase() + prefix.slice(1));
-      } catch (e) {
-        console.error('Error reading friends list:', e);
-      }
-    }
-  }, [stage, toEmail]);
-
-  const handleAddToFriends = () => {
-    if (typeof window === 'undefined') return;
-    try {
-      const stored = localStorage.getItem('pulsepay_friends');
-      const list = stored ? JSON.parse(stored) : [];
+    if (stage === 'Completed' && email) {
+      const checkFriend = async () => {
+        try {
+          const res = await fetch(`/api/friends?email=${encodeURIComponent(email)}`);
+          if (res.ok) {
+            const list = await res.json();
+            const exists = list.some((f: any) => f.email.toLowerCase() === toEmail.toLowerCase());
+            setIsAddedToFriends(exists);
+          }
+        } catch (e) {
+          console.error('Error checking friends list:', e);
+        }
+      };
+      checkFriend();
       
-      const exists = list.some((f: any) => f.email.toLowerCase() === toEmail.toLowerCase());
-      if (!exists) {
-        const newFriend = {
-          id: `friend-${Math.random().toString(36).substring(2, 9)}`,
-          email: toEmail.toLowerCase(),
-          name: friendName.trim() || toEmail.split('@')[0],
-          initials: (friendName.trim() || toEmail).substring(0, 2).toUpperCase(),
-        };
-        const updatedList = [...list, newFriend];
-        localStorage.setItem('pulsepay_friends', JSON.stringify(updatedList));
+      // Pre-fill friend nickname with email prefix
+      const prefix = toEmail.split('@')[0];
+      setFriendName(prefix.charAt(0).toUpperCase() + prefix.slice(1));
+    }
+  }, [stage, toEmail, email]);
+
+  const handleAddToFriends = async () => {
+    if (!email) return;
+    try {
+      const res = await fetch('/api/friends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          friendEmail: toEmail,
+          friendName: friendName.trim() || toEmail.split('@')[0],
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to save friend in database');
       }
+
       setIsAddedToFriends(true);
       setIsAddingFriend(false);
     } catch (e) {
       console.error('Error saving friend:', e);
+      alert('Could not save friend to database.');
     }
   };
 

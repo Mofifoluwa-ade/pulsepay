@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ua } from '../../../lib/particle';
 import { getZeroDevClient } from '../../../lib/zerodev';
-import { getDb, saveDb } from '../../../lib/db';
 import { supabase, isSupabaseConfigured } from '../../../lib/supabase';
-import { Transaction } from '../../../lib/types';
 
 export async function POST(req: Request) {
   try {
@@ -59,7 +57,7 @@ export async function POST(req: Request) {
       userOperation: tx.userOp,
     });
 
-    // 4. Update the DB balance & transactions
+    // 4. Update the Supabase DB balance & transactions
     const partnerName = toEmail.includes('@') ? toEmail.split('@')[0] : toEmail;
     const cleanPartnerName = partnerName.charAt(0).toUpperCase() + partnerName.slice(1);
     const formattedTimestamp = 'Today, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -111,24 +109,7 @@ export async function POST(req: Request) {
         });
       }
     } else {
-      // Fallback to local db.json
-      const db = getDb();
-      const newTx: Transaction = {
-        id: txId,
-        type: 'send',
-        partnerName: cleanPartnerName,
-        partnerEmail: toEmail,
-        amount: numAmount,
-        timestamp: formattedTimestamp,
-        status: 'Completed',
-        token: 'USDC',
-        networkFee: 'Sponsored',
-        hash: txHash,
-      };
-
-      db.transactions = [newTx, ...db.transactions];
-      db.balance = Math.max(0, db.balance - numAmount);
-      saveDb(db);
+      console.warn('Supabase not configured or email missing. Transaction executed on-chain but not saved to database.');
     }
 
     return NextResponse.json({ txHash, status: 'pending' });
